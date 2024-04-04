@@ -23,6 +23,8 @@ class Initializer:
             except KeyError:
                print(f"El nodo {node} no tiene una función asociada")
         
+        print(self.nodes_with_functions)
+        
 
     def draw(self):
         colors = ['g']*len(self.graph)

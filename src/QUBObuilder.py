@@ -20,8 +20,36 @@ class QUBObuilder:
                     problem_constant_bits[i][j] = 0
         
         print(problem_constant_bits)
+        
+        function_values = functions.values()
+        functions_list = [] 
+        for values in function_values:
+            for value in values:
+                if type(value) == set:
+                    for k in value:
+                        if k not in functions_list:
+                            functions_list.append(k)
+                else:
+                    if value not in functions_list:
+                        functions_list.append(value)
+        print(functions_list)
+        
+        initial_node_functions = []
+        if initial_node in functions:
+            for function in functions[initial_node]:
+                for values in function:
+                    initial_node_functions.append(values)
+        
+        print(initial_node_functions)
 
-        var_shape_set = VarShapeSet(BitArrayShape(name='x', shape=(N, N),axis_names=['i', 'j'], constant_bits=problem_constant_bits))
+        lista_slack = []
+        for i in functions_list:    
+            if i in initial_node_functions:
+                lista_slack.append(VarSlack(name='slack_variable_'+str(i),start=0,step=1,stop=N-1,slack_type=SlackType.binary))
+            else:
+                lista_slack.append(VarSlack(name='slack_variable_'+str(i),start=0,step=1,stop=N-2,slack_type=SlackType.binary))
+
+        var_shape_set = VarShapeSet(BitArrayShape(name='x', shape=(N, N),axis_names=['i', 'j'], constant_bits=problem_constant_bits), *lista_slack)
         
         cost_function = BinPol(var_shape_set)
         for i in range(N):
@@ -55,47 +83,27 @@ class QUBObuilder:
                 third_constrain_aux.power(2)
                 third_constrain = third_constrain + third_constrain_aux
     
-
- 
         nodes_with_functions = functions.keys()
-        
-        function_values = functions.values()
-        functions_list = [] 
-        for values in function_values:
-            for value in values:
-                if type(value) == set:
-                    for k in value:
-                        functions_list.append(k)
-                else:
-                    functions_list.append(value)
-        functions_list.sort()
-        #print(functions_list)
-        
-        N = 4
-        minimum_bits = math.ceil(math.log(N+1, 2))
-        print("El número mínimo de bits es: ", minimum_bits)
-        print("Podemos representar hasta el: ", 2 ** minimum_bits - 1)
-        print("Solo necesitamos representar hasta el: ", N)
-        ultimo_coef = 2**(minimum_bits - 1)
-        resta_a_coeficiente = 2 ** minimum_bits - N - 1
-        print("El ultimo coeficiente es: ", ultimo_coef)
-        print("Debo restarle a este coeficiente: ", resta_a_coeficiente)
-
-       
-        var_slack = VarSlack(name='slack_variable',start=0,step=1,stop=N,slack_type=SlackType.binary)
-        var_shape = VarShapeSet(var_slack)
         variable_constrain = BinPol(var_shape_set)
-        for function in functions_list:  
+
+        for function in functions_list:        
             variable_constrain_aux = BinPol(var_shape_set)
+            variable_constrain_aux.set_term(1,())
             for i in range(N):
                 for j in nodes_with_functions:
-                    variable_constrain_aux.add_term(1,("x",i,j))
-                variable_constrain_aux.add_term(1,("x",initial_node,i))
-                variable_constrain = variable_constrain_aux - BinPol(var_shape).add_slack_variable('slack_variable')
-                variable_constrain_aux.power(2)
+                    variable_constrain_aux.add_term(-1,("x",i,j))
+            if function in initial_node_functions:
+                variable_constrain_aux.add_term(-1,()) 
+            variable_constrain_aux.add_slack_variable('slack_variable_'+str(function), factor=-1)
+            variable_constrain_aux.power(2)
             variable_constrain = variable_constrain + variable_constrain_aux
         
         print(variable_constrain)
+        
+        alpha = 100
+        QUBOexpression = cost_function + alpha* (first_constrain + second_constrain + third_constrain + variable_constrain)
+        
+        return QUBOexpression
 
             
 
