@@ -64,7 +64,6 @@ class QUBObuilder:
             first_constrain.add_term(-1,("x",initial_node,j))
         first_constrain.power(2)
         
-
         second_constrain = BinPol(var_shape_set)
         second_constrain.set_term(1,())
         for i in range(N):
@@ -83,27 +82,34 @@ class QUBObuilder:
                 third_constrain_aux.power(2)
                 third_constrain = third_constrain + third_constrain_aux
     
-        nodes_with_functions = functions.keys()
         variable_constrain = BinPol(var_shape_set)
-
         for function in functions_list:        
             variable_constrain_aux = BinPol(var_shape_set)
-            variable_constrain_aux.set_term(1,())
+            variable_constrain_aux.set_term(-1,()) 
+            nodes_with_functions = []
+            for node in functions:
+                for group in functions[node]:
+                    if function in group:
+                        nodes_with_functions.append(node)
             for i in range(N):
-                for j in nodes_with_functions:
-                    variable_constrain_aux.add_term(-1,("x",i,j))
+                for j in nodes_with_functions: 
+                    variable_constrain_aux.add_term(1,("x",i,j))
+            print(nodes_with_functions)
             if function in initial_node_functions:
-                variable_constrain_aux.add_term(-1,()) 
+                variable_constrain_aux.add_term(1,()) 
             variable_constrain_aux.add_slack_variable('slack_variable_'+str(function), factor=-1)
             variable_constrain_aux.power(2)
             variable_constrain = variable_constrain + variable_constrain_aux
         
         print(variable_constrain)
         
-        alpha = 100
-        QUBOexpression = cost_function + alpha* (first_constrain + second_constrain + third_constrain + variable_constrain)
+        alpha1 = 500 * N
+        alpha2 = 500 * N
+        alpha3 = 500 * N
+        alpha4 = 1000 * N
+        QUBOexpression =  cost_function + alpha1*first_constrain + alpha2*second_constrain + alpha3*third_constrain + alpha4*variable_constrain
         
-        return QUBOexpression
+        return QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain ,variable_constrain
 
             
 
