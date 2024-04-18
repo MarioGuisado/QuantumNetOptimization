@@ -27,11 +27,7 @@ class Initializer:
         
 
     def draw(self):
-        colors = ['g']*len(self.graph)
-        pos = nx.spring_layout(self.graph)
-        fig = plt.figure(num='Graph (created at %s)' % datetime.now(), figsize=(9.0, 6.0))
-        nx.draw(self.graph, pos=pos, with_labels=True,
-                nodelist=range(len(colors)), node_color=colors)
+        nx.draw(self.graph, with_labels=True, node_color='lightblue', node_size=1000, font_size=12, font_weight='bold', arrows=True)
         plt.show()
 
     def get_graph(self):
