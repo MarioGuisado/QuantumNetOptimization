@@ -102,7 +102,30 @@ class QUBObuilder:
                 
     
         print("La tercera restriccion es: ", third_constrain)
+        ############################################################################################################
+        fourth_constrain = BinPol(var_shape_set)
+        termino_0 = BinPol(var_shape_set)
+        for i in range(N):
+                for j in range(N):
+                    if j != final_node and j != i and j != initial_node:
+                        fourth_constrain_aux = BinPol(var_shape_set)
+                        print("añadiendo termino: ", 1,("x",i,j) ," a la cuarta restriccion")
+                        fourth_constrain_aux.add_term(1,("x",i,j))
+                        print(fourth_constrain_aux)
+                        for k in range(N):
+                            if k != i and fourth_constrain_aux != termino_0:
+                                print("añadiendo termino2: ", -1,("x",j,k) ," a la cuarta restriccion")
+                                fourth_constrain_aux.add_term(-1,("x",j,k))
+                                print(fourth_constrain_aux)
+                        fourth_constrain_aux.power(2)
+                        print("La cuarta restriccion auxiliar es: ", fourth_constrain_aux)
+                        fourth_constrain = fourth_constrain + fourth_constrain_aux
+                        print("La cuarta restriccion es: ", fourth_constrain)
 
+        print("La cuarta restriccion es: ", fourth_constrain)
+                    
+
+        ############################################################################################################
         variable_constrain = BinPol(var_shape_set)
         for function in functions_list:      
             print("function: ", function)  
@@ -129,9 +152,9 @@ class QUBObuilder:
         alpha2 = 10 * N
         alpha3 = 10000* N
         alpha4 = 100 * N
-        QUBOexpression =  cost_function + alpha1*first_constrain + alpha2*second_constrain + alpha3*third_constrain + alpha4*variable_constrain
+        QUBOexpression =  cost_function + alpha1*first_constrain + alpha2*second_constrain + alpha3*third_constrain + alpha4*variable_constrain + 100*fourth_constrain
         
-        return QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain ,variable_constrain
+        return QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain , fourth_constrain, variable_constrain
 
             
 

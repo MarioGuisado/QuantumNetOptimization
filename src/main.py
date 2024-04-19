@@ -49,8 +49,8 @@ initializer.draw()
 builder = QUBObuilder()
 functions = {}
 functions[2] = [{2}]
-#functions[1] = [{1}]
-QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain ,variable_constrain = builder.get_QUBO_model(graph, 0, 5, functions)
+functions[1] = [{1}]
+QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain ,fourth_constrain, variable_constrain = builder.get_QUBO_model(graph, 0, 5, functions)
 solver = QUBOSolverCPU(
     number_iterations=20000,
     number_runs=10,
@@ -58,7 +58,7 @@ solver = QUBOSolverCPU(
     auto_tuning=AutoTuning.AUTO_SCALING_AND_SAMPLING)
 
 solution_list = solver.minimize(QUBOexpression)
-for p in cost_function, first_constrain, second_constrain ,third_constrain ,variable_constrain :
+for p in cost_function, first_constrain, second_constrain ,third_constrain , fourth_constrain, variable_constrain :
     configuration = solution_list.min_solution.configuration
     print("Min %s: at %s value %f" % (p, configuration, p.compute(configuration)) )
 
