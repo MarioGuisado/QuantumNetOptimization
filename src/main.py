@@ -12,7 +12,7 @@ from QUBObuilder import *
 
 
 graph = nx.DiGraph()
-graph.add_nodes_from([0, 1, 2, 3, 4, 5])
+graph.add_nodes_from([0, 1, 2, 3, 4, 5, 6, 7, 8])
 
 
 
@@ -25,14 +25,14 @@ graph.add_edge(3, 4)
 graph.add_edge(3, 5)
 graph.add_edge(4, 2)
 
-#graph.add_edge(5, 6)
-#graph.add_edge(6, 3)
-#graph.add_edge(3, 6)
-#graph.add_edge(6, 7)
-#graph.add_edge(7, 8)
-#graph.add_edge(8, 2)
-#graph.add_edge(2, 8)
-#graph.add_edge(8, 7)
+graph.add_edge(5, 6)
+graph.add_edge(6, 3)
+graph.add_edge(3, 6)
+graph.add_edge(6, 7)
+graph.add_edge(7, 8)
+graph.add_edge(8, 2)
+graph.add_edge(2, 8)
+graph.add_edge(8, 7)
 
 
 
@@ -50,16 +50,19 @@ builder = QUBObuilder()
 functions = {}
 functions[2] = [{2}]
 functions[1] = [{1}]
-QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain ,fourth_constrain, variable_constrain = builder.get_QUBO_model(graph, 0, 5, functions)
-solver = QUBOSolverCPU(
-    number_iterations=20000,
-    number_runs=10,
-    scaling_bit_precision=32,
-    auto_tuning=AutoTuning.AUTO_SCALING_AND_SAMPLING)
+functions[6] = [{6}]
+#alpha1 = 10 * N
+#alpha2 = 10 * N
+#alpha3 = 1000* N
+#alpha4 = 1000 * N
+#alpha5 = 100 * N
+QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain ,fifth_constrain, variable_constrain = builder.get_QUBO_model(graph, 0, 5, functions, 1, 2, 2, 2, 1)
+solver = QUBOSolverCPU()
 
 solution_list = solver.minimize(QUBOexpression)
-for p in cost_function, first_constrain, second_constrain ,third_constrain , fourth_constrain, variable_constrain :
-    configuration = solution_list.min_solution.configuration
+configuration = solution_list.min_solution.configuration
+
+for p in cost_function, first_constrain, second_constrain ,third_constrain , fifth_constrain, variable_constrain :
     print("Min %s: at %s value %f" % (p, configuration, p.compute(configuration)) )
 
 
