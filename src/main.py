@@ -12,7 +12,7 @@ from QUBObuilder import *
 
 
 graph = nx.DiGraph()
-graph.add_nodes_from([0, 1, 2, 3, 4, 5, 6])
+graph.add_nodes_from([0, 1, 2, 3, 4])
 
 
 graph.add_edge(0, 1)
@@ -20,8 +20,6 @@ graph.add_edge(1, 2)
 graph.add_edge(2, 3)
 graph.add_edge(3, 1)
 graph.add_edge(1, 4)
-graph.add_edge(5, 6)
-graph.add_edge(6, 5)
 
 #graph.add_edge(5, 6)
 #graph.add_edge(6, 3)
@@ -31,9 +29,6 @@ graph.add_edge(6, 5)
 #graph.add_edge(8, 2)
 #graph.add_edge(2, 8)
 #graph.add_edge(8, 7)
-
-
-
 
 
 
@@ -47,7 +42,6 @@ initializer.draw()
 builder = QUBObuilder()
 functions = {}
 functions[2] = [{2}]
-functions[6] = [{6}]
 
 #alpha1 = 10 * N
 #alpha2 = 10 * N
@@ -66,4 +60,4 @@ for p in cost_function, first_constrain, second_constrain ,third_constrain , fou
 
 solution_list = solver.minimize(QUBOexpression)
 my_bit_array = solution_list.min_solution.extract_bit_array('x')
-my_bit_array.draw(axis_names=['i', 'j'])
+my_bit_array.draw(axis_names=['i', 'j', 'a'])
