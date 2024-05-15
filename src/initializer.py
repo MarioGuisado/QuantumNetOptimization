@@ -25,6 +25,13 @@ class Initializer:
         
         print(self.nodes_with_functions)
         
+    def read_connections(self, path):
+        matrix = []
+        with open(path, 'r') as file:
+            for line in file:
+                row = [int(x) for x in line.split()]
+                matrix.append(row)
+        return matrix
 
     def draw(self):
         nx.draw(self.graph, with_labels=True, node_color='lightblue', node_size=1000, font_size=12, font_weight='bold', arrows=True)
