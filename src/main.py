@@ -44,13 +44,12 @@ for i, row in enumerate(connections):
         if value != 0:
             graph.add_edge(i, j)
 
-
 initializer = Initializer(graph)
 initializer.draw()
 
 builder = QUBObuilder()
 functions = {}
-#functions[2] = [{2}]
+functions[3] = [{3}]
 
 #alpha1 = 10 * N
 #alpha2 = 10 * N
@@ -58,13 +57,17 @@ functions = {}
 #alpha4 = 1000 * N
 #alpha5 = 100 * N
 QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain ,fourth_constrain,fifth_constrain, sixth_constrain, variable_constrain = builder.get_QUBO_model(graph, 0, 4, functions, connections, 1, 2, 2, 2, 2, 2)
-solver = QUBOSolverCPU()
+solver = QUBOSolverCPU(
+number_iterations=200000,
+number_runs=20,
+scaling_bit_precision=32,
+auto_tuning=AutoTuning.AUTO_SCALING_AND_SAMPLING)
 
 solution_list = solver.minimize(QUBOexpression)
 configuration = solution_list.min_solution.configuration
 
 for p in cost_function, first_constrain, second_constrain ,third_constrain , fourth_constrain,fifth_constrain, sixth_constrain, variable_constrain :
-    print("Min %s: at %s value %f" % (p, configuration, p.compute(configuration)) )
+    print("Min %s: at %s value %f" % (p, configuration, p.compute(configuration)))
 
 
 solution_list = solver.minimize(QUBOexpression)

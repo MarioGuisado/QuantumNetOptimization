@@ -11,13 +11,13 @@ from random import random
 class QUBObuilder:
     def get_QUBO_model(self, graph, initial_node, final_node, functions, connections, alpha1, alpha2, alpha3, alpha4, alpha5, alpha6):
         N = len(graph.nodes())
-        A = 1
+        A = 3
         problem_constant_bits = [[[-1 for _ in range(A)] for _ in range(N)] for _ in range(N)]
 
         for a in range(A):
             for i in range(N):
                 for j in range(N):
-                    if not graph.has_edge(i,j) or i == j:
+                    if connections[i][j] == 0:
                         problem_constant_bits[i][j][a] = 0
         
         #print(problem_constant_bits)
@@ -54,7 +54,7 @@ class QUBObuilder:
         for i in range(N):
             lista_slack.append(VarSlack(name='slack_nodo_'+str(i),start=0,step=1,stop=2,slack_type=SlackType.binary))
 
-        if A > 1:
+        if A > 2:
             for i in range(N):
                 for j in range(N):
                     if connections[i][j] != 0:
@@ -71,32 +71,45 @@ class QUBObuilder:
         variable_constrain = BinPol(var_shape_set)
         fifth_constrain = BinPol(var_shape_set) 
         sixth_constrain = BinPol(var_shape_set)
-        alpha1 = 30
-        alpha2 = 30
-        alpha3 = 25 
-        alpha4 = 40
-        alpha5 = 40
-        alpha6 = 2
-        QUBOexpression = 0
-        for a in range(A):
-            
+
+        #Constrain para el ancho de banda
+        if A > 2:
             for i in range(N):
                 for j in range(N):
-                    #print("Añadiendo termino: ", 1,("x",i,j) ," a la funcion de costo")
-                    cost_function.add_term(1,("x",i,j,a))
-                    #print(cost_function)
-
-            #print("La funcion de costo es: ", cost_function)
+                    if connections[i][j] != 0:
+                        sixth_constrain_aux = BinPol(var_shape_set)
+                        sixth_constrain_aux.set_term(-1 * connections[i][j],())
+                        for a in range(A):                     
+                            sixth_constrain_aux.add_term(1,("x",i,j,a))
+                        sixth_constrain_aux.add_slack_variable('slack_bandwidth_'+str(i)+'_'+str(j), factor=1)
+                        sixth_constrain_aux.power(2)
+                        sixth_constrain = sixth_constrain + sixth_constrain_aux
+        alpha1 = 200
+        alpha2 = 200
+        alpha3 = 500
+        variable_alpha = 500
+        alpha4 = 600
+        alpha5 = 500
+        alpha6 = 200
+        QUBOexpression = 0
+        for a in range(A):
+            cost_function_aux = BinPol(var_shape_set)
+            for i in range(N):
+                for j in range(N):
+                    #print("Añadiendo termino: ", 1,("x",i,j,a) ," a la funcion de costo")
+                    cost_function_aux.add_term(1,("x",i,j,a))
+                    #print(cost_function_aux)
+            cost_function = cost_function + cost_function_aux
 
             first_constrain_aux = BinPol(var_shape_set)
             first_constrain_aux.set_term(1,())
             for j in range(N):
-                print("Añadiendo termino: ", 1,("x",initial_node,j,a) ," a la primera restriccion")
+                #print("Añadiendo termino: ", 1,("x",initial_node,j,a) ," a la primera restriccion")
                 first_constrain_aux.add_term(-1,("x",initial_node,j,a))
-                print(first_constrain_aux)
+                #print(first_constrain_aux)
             first_constrain_aux.power(2)
             first_constrain = first_constrain + first_constrain_aux
-            print("La primera restriccion es: ", first_constrain)
+            #print("La primera restriccion es: ", first_constrain)
             
             second_constrain_aux = BinPol(var_shape_set)
             second_constrain_aux.set_term(1,())
@@ -152,53 +165,41 @@ class QUBObuilder:
 
             #Constrain para asegurarse que no se vuelve a pasar por un nodo por el que ya hemos pasado
             for i in range(N):
-                print("nodo: ", i)
+                #print("nodo: ", i)
                 fourth_constrain_aux = BinPol(var_shape_set)
                 fourth_constrain_aux.set_term(-1,())
                 for j in range(N):
                     fourth_constrain_aux.add_term(1,("x",i,j,a))
-                print("La cuarta restriccion auxiliar es: ", fourth_constrain_aux)
+                #print("La cuarta restriccion auxiliar es: ", fourth_constrain_aux)
                 fourth_constrain_aux.add_slack_variable('slack_nodo_'+str(i), factor=1)
-                print("La cuarta restriccion auxiliar con slack es: ", fourth_constrain_aux)
+                #print("La cuarta restriccion auxiliar con slack es: ", fourth_constrain_aux)
                 fourth_constrain_aux.power(2)
-                print("La cuarta restriccion auxiliar con slack al cuadrado es: ", fourth_constrain_aux)
+                #print("La cuarta restriccion auxiliar con slack al cuadrado es: ", fourth_constrain_aux)
                 fourth_constrain = fourth_constrain + fourth_constrain_aux
-                print("La cuarta restriccion es: ", fourth_constrain)
+                #print("La cuarta restriccion es: ", fourth_constrain)
 
-            print("La cuarta restriccion es: ", fourth_constrain)
+            #print("La cuarta restriccion es: ", fourth_constrain)
                         
             #Constrain para evitar ciclos de 2
             for i in range(N):
                 for j in range(N):
                     fifth_constrain_aux = BinPol(var_shape_set)
                     fifth_constrain_aux2 = BinPol(var_shape_set)
-                    print("Añadiendo termino: ", 1,("x",i,j,a) ," a la quinta restriccion")
+                    #print("Añadiendo termino: ", 1,("x",i,j,a) ," a la quinta restriccion")
                     fifth_constrain_aux.add_term(1,("x",i,j,a))
-                    print("Añadiendo termino: ", 1,("x",j,i,a) ," a la quinta restriccion")
+                    #print("Añadiendo termino: ", 1,("x",j,i,a) ," a la quinta restriccion")
                     fifth_constrain_aux2.add_term(1,("x",j,i,a))
 
                     fifth_constrain_aux = fifth_constrain_aux * fifth_constrain_aux2
-                    print("La quinta restriccion auxiliar es: ", fifth_constrain_aux)
+                    #print("La quinta restriccion auxiliar es: ", fifth_constrain_aux)
                     fifth_constrain_aux.power(2)
-                    print("La quinta restriccion auxiliar al cuadrado es: ", fifth_constrain_aux)
+                    #print("La quinta restriccion auxiliar al cuadrado es: ", fifth_constrain_aux)
 
                     fifth_constrain = fifth_constrain + fifth_constrain_aux
-                    print("La quinta restriccion es: ", fifth_constrain)
+                    #print("La quinta restriccion es: ", fifth_constrain)
             
-            #Constrain para el ancho de banda
-            if A > 1:
-                for i in range(N):
-                    for j in range(N):
-                        if connections[i][j] != 0:
-                            sixth_constrain_aux = BinPol(var_shape_set)
-                            sixth_constrain_aux.set_term(-1 * connections[i][j],())
-                            sixth_constrain_aux.add_term(1,("x",i,j,a))
-                            sixth_constrain_aux.add_slack_variable('slack_bandwidth_'+str(i)+'_'+str(j), factor=1)
-                            sixth_constrain_aux.power(2)
-                            sixth_constrain = sixth_constrain + sixth_constrain_aux
-            
-            QUBOexpression = QUBOexpression + cost_function + alpha1*first_constrain + alpha2*second_constrain + alpha3*third_constrain + alpha4*variable_constrain + alpha4*fourth_constrain + alpha5*fifth_constrain + 0*sixth_constrain
         
+        QUBOexpression = cost_function + alpha1*first_constrain + alpha2*second_constrain + alpha3*third_constrain + variable_alpha*variable_constrain + alpha4*fourth_constrain + alpha5*fifth_constrain + 0*sixth_constrain
         return QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain, fourth_constrain,fifth_constrain, sixth_constrain, variable_constrain
 
             
