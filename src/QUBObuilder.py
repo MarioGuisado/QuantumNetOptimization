@@ -13,6 +13,7 @@ class QUBObuilder:
         N = len(graph.nodes())
         A = 3
         problem_constant_bits = [[[-1 for _ in range(A)] for _ in range(N)] for _ in range(N)]
+        
 
         for a in range(A):
             for i in range(N):
@@ -34,7 +35,7 @@ class QUBObuilder:
                 else:
                     if value not in functions_list:
                         functions_list.append(value)
-        #print(functions_list)
+        print(functions_list)
         
         initial_node_functions = []
         if initial_node in functions:
@@ -45,20 +46,21 @@ class QUBObuilder:
         #print(initial_node_functions)
 
         lista_slack = []
-        for i in functions_list:    
-            if i in initial_node_functions:
-                lista_slack.append(VarSlack(name='slack_variable_'+str(i),start=0,step=1,stop=N-1,slack_type=SlackType.binary))
-            else:
-                lista_slack.append(VarSlack(name='slack_variable_'+str(i),start=0,step=1,stop=N-2,slack_type=SlackType.binary))
+        for a in range(A):
+            for i in functions_list:    
+                if i in initial_node_functions:
+                    lista_slack.append(VarSlack(name='slack_variable_'+str(i)+"_"+str(a),start=0,step=1,stop=N-1,slack_type=SlackType.binary))
+                else:
+                    lista_slack.append(VarSlack(name='slack_variable_'+str(i)+"_"+str(a),start=0,step=1,stop=N-2,slack_type=SlackType.binary))
+            
+        for a in range(A):
+            for i in range(N):
+                lista_slack.append(VarSlack(name='slack_nodo_'+str(i)+"_"+str(a),start=0,step=1,stop=2,slack_type=SlackType.binary))
+
         
         for i in range(N):
-            lista_slack.append(VarSlack(name='slack_nodo_'+str(i),start=0,step=1,stop=2,slack_type=SlackType.binary))
-
-        if A > 2:
-            for i in range(N):
-                for j in range(N):
-                    if connections[i][j] != 0:
-                        lista_slack.append(VarSlack(name='slack_bandwidth_'+str(i)+'_'+str(j),start=0,step=1,stop=connections[i][j]+1,slack_type=SlackType.binary))
+            for j in range(i+1,N):
+                lista_slack.append(VarSlack(name='slack_bandwidth_'+str(i)+'_'+str(j),start=0,step=1,stop=connections[i][j]+1,slack_type=SlackType.binary))
 
         var_shape_set = VarShapeSet(BitArrayShape(name='x', shape=(N, N, A),axis_names=['i', 'j', 'a'], constant_bits=problem_constant_bits_np), *lista_slack)
         
@@ -75,12 +77,12 @@ class QUBObuilder:
         #Constrain para el ancho de banda
         if A > 2:
             for i in range(N):
-                for j in range(N):
-                    if connections[i][j] != 0:
+                for j in range(i+1,N):
                         sixth_constrain_aux = BinPol(var_shape_set)
-                        sixth_constrain_aux.set_term(-1 * connections[i][j],())
+                        sixth_constrain_aux.set_term(-1 * (connections[i][j]),())
                         for a in range(A):                     
                             sixth_constrain_aux.add_term(1,("x",i,j,a))
+                            sixth_constrain_aux.add_term(1,("x",j,i,a))
                         sixth_constrain_aux.add_slack_variable('slack_bandwidth_'+str(i)+'_'+str(j), factor=1)
                         sixth_constrain_aux.power(2)
                         sixth_constrain = sixth_constrain + sixth_constrain_aux
@@ -157,7 +159,7 @@ class QUBObuilder:
                 #print(nodes_with_functions)
                 if function in initial_node_functions:
                     variable_constrain_aux.add_term(1,()) 
-                variable_constrain_aux.add_slack_variable('slack_variable_'+str(function), factor=-1)
+                variable_constrain_aux.add_slack_variable('slack_variable_'+str(function)+"_"+str(a), factor=-1)
                 variable_constrain_aux.power(2)
                 variable_constrain = variable_constrain + variable_constrain_aux
             
@@ -171,7 +173,7 @@ class QUBObuilder:
                 for j in range(N):
                     fourth_constrain_aux.add_term(1,("x",i,j,a))
                 #print("La cuarta restriccion auxiliar es: ", fourth_constrain_aux)
-                fourth_constrain_aux.add_slack_variable('slack_nodo_'+str(i), factor=1)
+                fourth_constrain_aux.add_slack_variable('slack_nodo_'+str(i)+"_"+str(a), factor=1)
                 #print("La cuarta restriccion auxiliar con slack es: ", fourth_constrain_aux)
                 fourth_constrain_aux.power(2)
                 #print("La cuarta restriccion auxiliar con slack al cuadrado es: ", fourth_constrain_aux)
@@ -199,7 +201,7 @@ class QUBObuilder:
                     #print("La quinta restriccion es: ", fifth_constrain)
             
         
-        QUBOexpression = cost_function + alpha1*first_constrain + alpha2*second_constrain + alpha3*third_constrain + variable_alpha*variable_constrain + alpha4*fourth_constrain + alpha5*fifth_constrain + 0*sixth_constrain
+        QUBOexpression = cost_function + alpha1*first_constrain + alpha2*second_constrain + alpha3*third_constrain + variable_alpha*variable_constrain + alpha4*fourth_constrain + alpha5*fifth_constrain + alpha6*sixth_constrain
         return QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain, fourth_constrain,fifth_constrain, sixth_constrain, variable_constrain
 
             

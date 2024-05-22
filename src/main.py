@@ -38,6 +38,11 @@ def read_connections(path):
     return matrix
 
 connections = read_connections('./instancias/6 nodos/topologia_6.DAT')
+#print(connections)
+#coste_conexion = 2
+#connections = np.floor_divide(connections, coste_conexion)
+
+#print(connections)
 
 for i, row in enumerate(connections):
     for j, value in enumerate(row):
@@ -49,7 +54,23 @@ initializer.draw()
 
 builder = QUBObuilder()
 functions = {}
-functions[3] = [{3}]
+functions[2] = [{3,5}]
+functions[5] = [{5}]
+
+
+#with open('./instancias/6 nodos/nodos_6.DAT', 'r') as file:
+    #for index, line in enumerate(file):
+        # Dividir la línea en elementos y convertirlos en enteros
+        #elementos = list(map(int, line.split()))
+        
+        # Filtrar los ceros y crear un conjunto de funciones
+        #funciones = set(filter(lambda x: x != 0, elementos))
+        
+        # Almacenar el conjunto en el diccionario
+        #functions[index] = [funciones]
+
+#print(functions)
+
 
 #alpha1 = 10 * N
 #alpha2 = 10 * N
@@ -58,9 +79,9 @@ functions[3] = [{3}]
 #alpha5 = 100 * N
 QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain ,fourth_constrain,fifth_constrain, sixth_constrain, variable_constrain = builder.get_QUBO_model(graph, 0, 4, functions, connections, 1, 2, 2, 2, 2, 2)
 solver = QUBOSolverCPU(
-number_iterations=200000,
-number_runs=20,
-scaling_bit_precision=32,
+number_iterations=350000,
+number_runs=25,
+scaling_bit_precision=16,
 auto_tuning=AutoTuning.AUTO_SCALING_AND_SAMPLING)
 
 solution_list = solver.minimize(QUBOexpression)
