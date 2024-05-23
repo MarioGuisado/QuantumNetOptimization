@@ -9,9 +9,9 @@ import networkx as nx
 from random import random
 
 class QUBObuilder:
-    def get_QUBO_model(self, graph, initial_node, final_node, functions, connections, alpha1, alpha2, alpha3, alpha4, alpha5, alpha6):
+    def get_QUBO_model(self, graph, initial_node, final_node, functions, connections, resources, alpha1, alpha2, alpha3, alpha4, alpha5, alpha6):
         N = len(graph.nodes())
-        A = 3
+        A = 2
         problem_constant_bits = [[[-1 for _ in range(A)] for _ in range(N)] for _ in range(N)]
         
 
@@ -35,7 +35,7 @@ class QUBObuilder:
                 else:
                     if value not in functions_list:
                         functions_list.append(value)
-        print(functions_list)
+        #print(functions_list)
         
         initial_node_functions = []
         if initial_node in functions:
@@ -62,6 +62,9 @@ class QUBObuilder:
             for j in range(i+1,N):
                 lista_slack.append(VarSlack(name='slack_bandwidth_'+str(i)+'_'+str(j),start=0,step=1,stop=connections[i][j]+1,slack_type=SlackType.binary))
 
+        for i in range(N):
+            lista_slack.append(VarSlack(name='slack_resources_node_'+str(i),start=0,step=1,stop=resources[i]+1,slack_type=SlackType.binary))
+
         var_shape_set = VarShapeSet(BitArrayShape(name='x', shape=(N, N, A),axis_names=['i', 'j', 'a'], constant_bits=problem_constant_bits_np), *lista_slack)
         
 
@@ -73,19 +76,32 @@ class QUBObuilder:
         variable_constrain = BinPol(var_shape_set)
         fifth_constrain = BinPol(var_shape_set) 
         sixth_constrain = BinPol(var_shape_set)
+        seventh_constrain = BinPol(var_shape_set)
+
 
         #Constrain para el ancho de banda
-        if A > 2:
-            for i in range(N):
-                for j in range(i+1,N):
-                        sixth_constrain_aux = BinPol(var_shape_set)
-                        sixth_constrain_aux.set_term(-1 * (connections[i][j]),())
-                        for a in range(A):                     
-                            sixth_constrain_aux.add_term(1,("x",i,j,a))
-                            sixth_constrain_aux.add_term(1,("x",j,i,a))
-                        sixth_constrain_aux.add_slack_variable('slack_bandwidth_'+str(i)+'_'+str(j), factor=1)
-                        sixth_constrain_aux.power(2)
-                        sixth_constrain = sixth_constrain + sixth_constrain_aux
+        for i in range(N):
+            for j in range(i+1,N):
+                    sixth_constrain_aux = BinPol(var_shape_set)
+                    sixth_constrain_aux.set_term(-1 * (connections[i][j]),())
+                    for a in range(A):                     
+                        sixth_constrain_aux.add_term(1,("x",i,j,a))
+                        sixth_constrain_aux.add_term(1,("x",j,i,a))
+                    sixth_constrain_aux.add_slack_variable('slack_bandwidth_'+str(i)+'_'+str(j), factor=1)
+                    sixth_constrain_aux.power(2)
+                    sixth_constrain = sixth_constrain + sixth_constrain_aux
+        
+        #Constrain para los recursos
+        for j in range(N):
+            seventh_constrain_aux = BinPol(var_shape_set)
+            seventh_constrain_aux.set_term(-1 * resources[j],())
+            for i in range(N): 
+                for a in range(A):
+                    seventh_constrain_aux.add_term(1,("x",i,j,a))
+            seventh_constrain_aux.add_slack_variable('slack_resources_node_'+str(j), factor=1)
+            seventh_constrain_aux.power(2)
+            seventh_constrain = seventh_constrain + seventh_constrain_aux
+
         alpha1 = 200
         alpha2 = 200
         alpha3 = 500
@@ -93,7 +109,9 @@ class QUBObuilder:
         alpha4 = 600
         alpha5 = 500
         alpha6 = 200
+        alpha7 = 200
         QUBOexpression = 0
+
         for a in range(A):
             cost_function_aux = BinPol(var_shape_set)
             for i in range(N):
@@ -201,7 +219,7 @@ class QUBObuilder:
                     #print("La quinta restriccion es: ", fifth_constrain)
             
         
-        QUBOexpression = cost_function + alpha1*first_constrain + alpha2*second_constrain + alpha3*third_constrain + variable_alpha*variable_constrain + alpha4*fourth_constrain + alpha5*fifth_constrain + alpha6*sixth_constrain
+        QUBOexpression = cost_function + alpha1*first_constrain + alpha2*second_constrain + alpha3*third_constrain + variable_alpha*variable_constrain + alpha4*fourth_constrain + alpha5*fifth_constrain + alpha6*sixth_constrain + alpha7*seventh_constrain
         return QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain, fourth_constrain,fifth_constrain, sixth_constrain, variable_constrain
 
             

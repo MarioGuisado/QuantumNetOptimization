@@ -54,8 +54,17 @@ initializer.draw()
 
 builder = QUBObuilder()
 functions = {}
-functions[2] = [{3,5}]
-functions[5] = [{5}]
+#functions[2] = [{3,5}]
+#functions[5] = [{5}]
+
+# Abre el archivo en modo de lectura
+with open('./instancias/6 nodos/nodos_recursos_6.DAT', 'r') as file:
+    # Lee la línea del archivo y la divide en números
+    resources = file.readline().split()
+
+# Convierte los números a enteros
+resources = [int(resource) for resource in resources]
+
 
 
 #with open('./instancias/6 nodos/nodos_6.DAT', 'r') as file:
@@ -77,10 +86,10 @@ functions[5] = [{5}]
 #alpha3 = 1000* N
 #alpha4 = 1000 * N
 #alpha5 = 100 * N
-QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain ,fourth_constrain,fifth_constrain, sixth_constrain, variable_constrain = builder.get_QUBO_model(graph, 0, 4, functions, connections, 1, 2, 2, 2, 2, 2)
+QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain ,fourth_constrain,fifth_constrain, sixth_constrain, variable_constrain = builder.get_QUBO_model(graph, 0, 4, functions, connections,resources, 1, 2, 2, 2, 2, 2)
 solver = QUBOSolverCPU(
-number_iterations=350000,
-number_runs=25,
+number_iterations=1500000,
+number_runs=50,
 scaling_bit_precision=16,
 auto_tuning=AutoTuning.AUTO_SCALING_AND_SAMPLING)
 
