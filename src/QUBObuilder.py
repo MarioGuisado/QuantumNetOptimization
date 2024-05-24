@@ -94,7 +94,7 @@ class QUBObuilder:
         #Constrain para los recursos
         for j in range(N):
             seventh_constrain_aux = BinPol(var_shape_set)
-            seventh_constrain_aux.set_term(-1 * resources[j],())
+            seventh_constrain_aux.set_term(-1 * (resources[j]),())
             for i in range(N): 
                 for a in range(A):
                     seventh_constrain_aux.add_term(1,("x",i,j,a))
@@ -108,8 +108,8 @@ class QUBObuilder:
         variable_alpha = 500
         alpha4 = 600
         alpha5 = 500
-        alpha6 = 200
-        alpha7 = 200
+        alpha6 = 400
+        alpha7 = 400
         QUBOexpression = 0
 
         for a in range(A):

@@ -9,7 +9,10 @@ import networkx as nx
 from random import random
 from initializer import * 
 from QUBObuilder import *
-
+from dimod.generators import and_gate
+from dwave.system import LeapHybridSampler
+from dwave.system.composites import EmbeddingComposite
+from dwave.system.samplers import DWaveSampler
 
 graph = nx.DiGraph()
 
@@ -54,7 +57,7 @@ initializer.draw()
 
 builder = QUBObuilder()
 functions = {}
-#functions[2] = [{3,5}]
+#functions[3] = [{3,5}]
 #functions[5] = [{5}]
 
 # Abre el archivo en modo de lectura
@@ -88,9 +91,9 @@ resources = [int(resource) for resource in resources]
 #alpha5 = 100 * N
 QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain ,fourth_constrain,fifth_constrain, sixth_constrain, variable_constrain = builder.get_QUBO_model(graph, 0, 4, functions, connections,resources, 1, 2, 2, 2, 2, 2)
 solver = QUBOSolverCPU(
-number_iterations=1500000,
-number_runs=50,
-scaling_bit_precision=16,
+number_iterations=200000,
+number_runs=20,
+scaling_bit_precision=32,
 auto_tuning=AutoTuning.AUTO_SCALING_AND_SAMPLING)
 
 solution_list = solver.minimize(QUBOexpression)
@@ -103,3 +106,61 @@ for p in cost_function, first_constrain, second_constrain ,third_constrain , fou
 solution_list = solver.minimize(QUBOexpression)
 my_bit_array = solution_list.min_solution.extract_bit_array('x')
 my_bit_array.draw(axis_names=['i', 'j', 'a'])
+
+
+
+def as_bqm(self) -> 'dimod.BinaryQuadraticModel':
+    """
+    The polynomial is returned as a :class:`dimod.BinaryQuadraticModel` object.
+
+    :return: qubo as dimod.BinaryQuadraticModel object
+    :rtype: dimod.BinaryQuadraticModel
+    """
+
+    try:
+        import dimod
+    except Exception as oops:
+        print('\n\n' + (100 * '#'))
+        print('pip install dwave-ocean-sdk')
+        print((100 * '#') + '\n\n')
+        raise oops
+
+    return dimod.BinaryQuadraticModel(
+        {i0: self._p1[i0] for i0 in self._p1},
+        {(i0, i1): self._p2[i0][i1] for i0 in self._p2 for i1 in self._p2[i0]},
+        self._p0,
+        dimod.BINARY)
+        
+
+bqm_problem=QUBOexpression.as_bqm()
+os.environ['DWAVE_API_TOKEN']='DEV-6d3884fc26ae2d49987a7b350237d126ec957ad7'
+
+#sampler = LeapHybridSampler()
+#answer = sampler.sample(bqm_problem)
+#print(answer)
+
+#for datum in answer.data(['sample', 'energy']):
+#   print(datum.sample, datum.energy)
+
+#solution_dwave=list(datum.sample.values())
+
+#print( "QUBOexpression  = %10.6f" % (QUBOexpression.compute(solution_dwave)) )
+
+
+sample_time = time.time()
+
+# Set a QPU sampler
+sampler = EmbeddingComposite(DWaveSampler())
+
+num_reads = 2000
+sampleset = sampler.sample(bqm_problem, num_reads=num_reads, label='Purely Quantum Exec')
+
+for datum in sampleset.lowest().data(['sample', 'energy']):
+    print(datum.sample, datum.energy)
+
+solution_dwave=list(datum.sample.values())
+
+my_bit_array = solution_dwave.min_solution.extract_bit_array('x')
+my_bit_array.draw(axis_names=['i', 'j', 'a'])
+
+print( "QUBOexpression  = %10.6f" % (QUBOexpression.compute(solution_dwave)) )
