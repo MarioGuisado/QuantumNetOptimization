@@ -63,7 +63,8 @@ class QUBObuilder:
                 lista_slack.append(VarSlack(name='slack_bandwidth_'+str(i)+'_'+str(j),start=0,step=1,stop=connections[i][j]+1,slack_type=SlackType.binary))
 
         for i in range(N):
-            lista_slack.append(VarSlack(name='slack_resources_node_'+str(i),start=0,step=1,stop=resources[i]+1,slack_type=SlackType.binary))
+            if i != initial_node and i != final_node:
+                lista_slack.append(VarSlack(name='slack_resources_node_'+str(i),start=0,step=1,stop=resources[i]+1,slack_type=SlackType.binary))
 
         var_shape_set = VarShapeSet(BitArrayShape(name='x', shape=(N, N, A),axis_names=['i', 'j', 'a'], constant_bits=problem_constant_bits_np), *lista_slack)
         
@@ -93,23 +94,24 @@ class QUBObuilder:
         
         #Constrain para los recursos
         for j in range(N):
-            seventh_constrain_aux = BinPol(var_shape_set)
-            seventh_constrain_aux.set_term(-1 * (resources[j]),())
-            for i in range(N): 
-                for a in range(A):
-                    seventh_constrain_aux.add_term(1,("x",i,j,a))
-            seventh_constrain_aux.add_slack_variable('slack_resources_node_'+str(j), factor=1)
-            seventh_constrain_aux.power(2)
-            seventh_constrain = seventh_constrain + seventh_constrain_aux
+            if j != initial_node and j != final_node:
+                seventh_constrain_aux = BinPol(var_shape_set)
+                seventh_constrain_aux.set_term(-1 * (resources[j]),())
+                for i in range(N): 
+                    for a in range(A):
+                        seventh_constrain_aux.add_term(1,("x",i,j,a))
+                seventh_constrain_aux.add_slack_variable('slack_resources_node_'+str(j), factor=1)
+                seventh_constrain_aux.power(2)
+                seventh_constrain = seventh_constrain + seventh_constrain_aux
 
-        alpha1 = 200
-        alpha2 = 200
+        alpha1 = 500
+        alpha2 = 500
         alpha3 = 500
         variable_alpha = 500
         alpha4 = 600
         alpha5 = 500
-        alpha6 = 400
-        alpha7 = 400
+        alpha6 = 500
+        alpha7 = 500
         QUBOexpression = 0
 
         for a in range(A):
@@ -220,7 +222,7 @@ class QUBObuilder:
             
         
         QUBOexpression = cost_function + alpha1*first_constrain + alpha2*second_constrain + alpha3*third_constrain + variable_alpha*variable_constrain + alpha4*fourth_constrain + alpha5*fifth_constrain + alpha6*sixth_constrain + alpha7*seventh_constrain
-        return QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain, fourth_constrain,fifth_constrain, sixth_constrain, variable_constrain
+        return QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain, fourth_constrain,fifth_constrain, sixth_constrain, seventh_constrain, variable_constrain
 
             
 

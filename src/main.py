@@ -40,18 +40,33 @@ def read_connections(path):
             matrix.append(row)
     return matrix
 
-connections = read_connections('./instancias/6 nodos/topologia_6.DAT')
+#connections = read_connections('./instancias/6 nodos/topologia_6.DAT')
+connections = read_connections('./instancias/prueba/prueba.DAT')
+
+
+availableConnections = 0
+for sublist in connections:
+    for i in sublist:
+        if i != 0:
+            availableConnections += 1
+
+#print(availableConnections)
+
 #print(connections)
 #coste_conexion = 2
 #connections = np.floor_divide(connections, coste_conexion)
 
 #print(connections)
 
-for i, row in enumerate(connections):
-    for j, value in enumerate(row):
-        if value != 0:
-            graph.add_edge(i, j)
+#for i, row in enumerate(connections):
+#    for j, value in enumerate(row):
+#        if value != 0:
+#            graph.add_edge(i, j)
 
+graph.add_edge(0, 1)
+graph.add_edge(1, 2)
+graph.add_edge(0, 3)
+graph.add_edge(3, 2)
 initializer = Initializer(graph)
 initializer.draw()
 
@@ -66,7 +81,8 @@ with open('./instancias/6 nodos/nodos_recursos_6.DAT', 'r') as file:
     resources = file.readline().split()
 
 # Convierte los números a enteros
-resources = [int(resource) for resource in resources]
+#resources = [int(resource) for resource in resources]
+resources = [10, 3, 10, 0]
 
 
 
@@ -89,24 +105,23 @@ resources = [int(resource) for resource in resources]
 #alpha3 = 1000* N
 #alpha4 = 1000 * N
 #alpha5 = 100 * N
-QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain ,fourth_constrain,fifth_constrain, sixth_constrain, variable_constrain = builder.get_QUBO_model(graph, 0, 4, functions, connections,resources, 1, 2, 2, 2, 2, 2)
+QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain ,fourth_constrain,fifth_constrain, sixth_constrain,seventh_constrain, variable_constrain = builder.get_QUBO_model(graph, 0, 2, functions, connections,resources, 1, 2, 2, 2, 2, 2)
 solver = QUBOSolverCPU(
 number_iterations=200000,
 number_runs=20,
-scaling_bit_precision=32,
+scaling_bit_precision=16,
 auto_tuning=AutoTuning.AUTO_SCALING_AND_SAMPLING)
 
-solution_list = solver.minimize(QUBOexpression)
-configuration = solution_list.min_solution.configuration
+#solution_list = solver.minimize(QUBOexpression)
+#configuration = solution_list.min_solution.configuration
 
-for p in cost_function, first_constrain, second_constrain ,third_constrain , fourth_constrain,fifth_constrain, sixth_constrain, variable_constrain :
-    print("Min %s: at %s value %f" % (p, configuration, p.compute(configuration)))
+#for p in cost_function, first_constrain, second_constrain ,third_constrain , fourth_constrain,fifth_constrain, sixth_constrain,seventh_constrain, variable_constrain :
+#    print("Min %s: at %s value %f" % (p, configuration, p.compute(configuration)))
 
 
-solution_list = solver.minimize(QUBOexpression)
-my_bit_array = solution_list.min_solution.extract_bit_array('x')
-my_bit_array.draw(axis_names=['i', 'j', 'a'])
-
+#solution_list = solver.minimize(QUBOexpression)
+#my_bit_array = solution_list.min_solution.extract_bit_array('x')
+#my_bit_array.draw(axis_names=['i', 'j', 'a'])
 
 
 def as_bqm(self) -> 'dimod.BinaryQuadraticModel':
@@ -153,14 +168,67 @@ sample_time = time.time()
 sampler = EmbeddingComposite(DWaveSampler())
 
 num_reads = 2000
-sampleset = sampler.sample(bqm_problem, num_reads=num_reads, label='Purely Quantum Exec')
+#sampleset = sampler.sample(bqm_problem, num_reads=num_reads, label='Purely Quantum Exec')
 
-for datum in sampleset.lowest().data(['sample', 'energy']):
-    print(datum.sample, datum.energy)
+samples = []
+contador = 0
+num_agents = 2
+#for datum in sampleset.lowest().data(['sample', 'energy']):
+#    if contador < 1:
+#        print(datum.sample, datum.energy)
+#        first_N_bits = {k: v for k, v in datum.sample.items() if k < availableConnections * num_agents}
+#        samples.append(first_N_bits)
+#    contador += 1
 
-solution_dwave=list(datum.sample.values())
+samples = [{0: 1, 1: 1, 2: 0, 3: 0, 4: 0, 5: 0, 6: 1, 7: 1, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0}]
+print(samples)
 
-my_bit_array = solution_dwave.min_solution.extract_bit_array('x')
-my_bit_array.draw(axis_names=['i', 'j', 'a'])
+# Itera sobre cada diccionario en samples
+# Calcula el número de filas y columnas para los subplots
+# Calcula el número de filas y columnas para los subplots
+n = len(samples) * num_agents  # Ajusta n para tener en cuenta los agentes
+cols = int(np.ceil(np.sqrt(n)))
+rows = int(np.ceil(n / cols))
 
-print( "QUBOexpression  = %10.6f" % (QUBOexpression.compute(solution_dwave)) )
+# Crea una figura
+fig = plt.figure(figsize=(cols*6, rows*6))
+
+for i, sample in enumerate(samples):
+    for agent in range(num_agents):
+        # Crea una matriz basada en la matriz de conexiones
+        matrix = np.zeros_like(connections)
+        contador = 0
+        for j, value in np.ndenumerate(connections):
+            if value == 0:
+                matrix[j] = 0
+            else:
+                # Usa el número de agente y el contador para calcular el índice correcto
+                matrix[j] = sample[contador*num_agents+agent]
+                contador += 1
+
+        # Selecciona el subplot
+        ax = fig.add_subplot(rows, cols, i*num_agents+agent+1)
+
+        # Dibuja la matriz como una serie de círculos
+        for (x, y), value in np.ndenumerate(matrix):
+            if connections[x][y] == 0:
+                color = 'lightblue'
+            elif value == 0:
+                color = 'blue' 
+            else:
+                color = 'red'
+            ax.scatter(x, y, c=color, s=200) 
+
+        # Establece las ubicaciones y etiquetas de las marcas de los ejes
+        ax.set_xticks(np.arange(matrix.shape[1]), np.arange(1, matrix.shape[1] + 1))
+        ax.set_yticks(np.arange(matrix.shape[0]), np.arange(1, matrix.shape[0] + 1))
+
+        # Agrega etiquetas a los ejes
+        ax.set_xlabel('i')
+        ax.set_ylabel('j')
+
+        # Establece el título del subplot
+        ax.set_title(f'Sample {i+1}, Agent {agent+1}')
+
+# Muestra la figura
+plt.show()
