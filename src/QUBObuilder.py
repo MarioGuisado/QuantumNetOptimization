@@ -9,9 +9,9 @@ import networkx as nx
 from random import random
 
 class QUBObuilder:
-    def get_QUBO_model(self, graph, initial_node, final_node, functions, connections, resources, alpha1, alpha2, alpha3, alpha4, alpha5, alpha6):
+    def get_QUBO_model(self, graph, initial_node, final_node, functions, connections, resources,num_agents, alpha1, alpha2, alpha3, alpha4, alpha5, alpha6):
         N = len(graph.nodes())
-        A = 2
+        A = num_agents
         problem_constant_bits = [[[-1 for _ in range(A)] for _ in range(N)] for _ in range(N)]
         
 
@@ -26,24 +26,23 @@ class QUBObuilder:
         
         function_values = functions.values()
         functions_list = [] 
-        for values in function_values:
-            for value in values:
-                if type(value) == set:
-                    for k in value:
-                        if k not in functions_list:
-                            functions_list.append(k)
-                else:
-                    if value not in functions_list:
-                        functions_list.append(value)
-        #print(functions_list)
+        for value in function_values:
+            if type(value) == tuple:
+                for k in value:
+                    if k not in functions_list:
+                        functions_list.append(k)
+            else:
+                if value not in functions_list:
+                    functions_list.append(value)
+        
+        print(functions_list)
         
         initial_node_functions = []
         if initial_node in functions:
             for function in functions[initial_node]:
-                for values in function:
-                    initial_node_functions.append(values)
+                initial_node_functions.append(function)
         
-        #print(initial_node_functions)
+        print(initial_node_functions)
 
         lista_slack = []
         for a in range(A):
@@ -55,7 +54,8 @@ class QUBObuilder:
             
         for a in range(A):
             for i in range(N):
-                lista_slack.append(VarSlack(name='slack_nodo_'+str(i)+"_"+str(a),start=0,step=1,stop=2,slack_type=SlackType.binary))
+                if i != initial_node and i != final_node:
+                    lista_slack.append(VarSlack(name='slack_nodo_'+str(i)+"_"+str(a),start=0,step=1,stop=2,slack_type=SlackType.binary))
 
         
         for i in range(N):
@@ -104,14 +104,14 @@ class QUBObuilder:
                 seventh_constrain_aux.power(2)
                 seventh_constrain = seventh_constrain + seventh_constrain_aux
 
-        alpha1 = 500
-        alpha2 = 500
-        alpha3 = 500
-        variable_alpha = 500
-        alpha4 = 600
-        alpha5 = 500
-        alpha6 = 500
-        alpha7 = 500
+        alpha1 = 50
+        alpha2 = 50
+        alpha3 = 50
+        variable_alpha = 50
+        alpha4 = 60
+        alpha5 = 50
+        alpha6 = 50
+        alpha7 = 50
         QUBOexpression = 0
 
         for a in range(A):
@@ -164,22 +164,26 @@ class QUBObuilder:
         
             #print("La tercera restriccion es: ", third_constrain)
             
-            for function in functions_list:      
+            for function_set in functions_list:      
                 #print("function: ", function)  
                 variable_constrain_aux = BinPol(var_shape_set)
                 variable_constrain_aux.set_term(-1,()) 
                 nodes_with_functions = []
                 for node in functions:
-                    for group in functions[node]:
-                        if function in group:
-                            nodes_with_functions.append(node)
+                    function_value = functions[node]
+                    if isinstance(function_value, tuple):
+                        function_value = set(function_value)
+                    elif not isinstance(function_value, set):
+                        function_value = {function_value}
+                    if function_set & function_value:
+                        nodes_with_functions.append(node)
                 for i in range(N):
                     for j in nodes_with_functions: 
                         variable_constrain_aux.add_term(1,("x",i,j,a))
                 #print(nodes_with_functions)
-                if function in initial_node_functions:
+                if function_set in initial_node_functions:
                     variable_constrain_aux.add_term(1,()) 
-                variable_constrain_aux.add_slack_variable('slack_variable_'+str(function)+"_"+str(a), factor=-1)
+                variable_constrain_aux.add_slack_variable('slack_variable_'+str(function_set)+"_"+str(a), factor=-1)
                 variable_constrain_aux.power(2)
                 variable_constrain = variable_constrain + variable_constrain_aux
             
@@ -187,18 +191,19 @@ class QUBObuilder:
 
             #Constrain para asegurarse que no se vuelve a pasar por un nodo por el que ya hemos pasado
             for i in range(N):
-                #print("nodo: ", i)
-                fourth_constrain_aux = BinPol(var_shape_set)
-                fourth_constrain_aux.set_term(-1,())
-                for j in range(N):
-                    fourth_constrain_aux.add_term(1,("x",i,j,a))
-                #print("La cuarta restriccion auxiliar es: ", fourth_constrain_aux)
-                fourth_constrain_aux.add_slack_variable('slack_nodo_'+str(i)+"_"+str(a), factor=1)
-                #print("La cuarta restriccion auxiliar con slack es: ", fourth_constrain_aux)
-                fourth_constrain_aux.power(2)
-                #print("La cuarta restriccion auxiliar con slack al cuadrado es: ", fourth_constrain_aux)
-                fourth_constrain = fourth_constrain + fourth_constrain_aux
-                #print("La cuarta restriccion es: ", fourth_constrain)
+                if i != initial_node and i != final_node:
+                    #print("nodo: ", i)
+                    fourth_constrain_aux = BinPol(var_shape_set)
+                    fourth_constrain_aux.set_term(-1,())
+                    for j in range(N):
+                        fourth_constrain_aux.add_term(1,("x",i,j,a))
+                    #print("La cuarta restriccion auxiliar es: ", fourth_constrain_aux)
+                    fourth_constrain_aux.add_slack_variable('slack_nodo_'+str(i)+"_"+str(a), factor=1)
+                    #print("La cuarta restriccion auxiliar con slack es: ", fourth_constrain_aux)
+                    fourth_constrain_aux.power(2)
+                    #print("La cuarta restriccion auxiliar con slack al cuadrado es: ", fourth_constrain_aux)
+                    fourth_constrain = fourth_constrain + fourth_constrain_aux
+                    #print("La cuarta restriccion es: ", fourth_constrain)
 
             #print("La cuarta restriccion es: ", fourth_constrain)
                         
