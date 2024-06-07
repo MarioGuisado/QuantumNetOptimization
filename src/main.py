@@ -29,8 +29,49 @@ def read_connections(path):
             matrix.append(row)
     return matrix
 
-connections = read_connections('./instancias/6 nodos/topologia_6.DAT')
-#connections = read_connections('./instancias/prueba/prueba.DAT')
+# Define los nombres de los archivos
+connection_file_names = {
+    '1': './instancias/6 nodos/topologia_6.DAT',
+    '2': './instancias/19 nodos/topologia_19.DAT',
+    '3': './instancias/52 nodos/topologia_52.DAT',
+}
+
+function_file_names = {
+    '1': './instancias/6 nodos/nodos_6.DAT',
+    '2': './instancias/19 nodos/nodos_19.DAT',
+    '3': './instancias/52 nodos/nodos_52.DAT',
+}
+
+resources_file_names = {
+    '1': './instancias/6 nodos/nodos_recursos_6.DAT',
+    '2': './instancias/19 nodos/nodos_recursos_19.DAT',
+    '3': './instancias/52 nodos/nodos_recursos_52.DAT',
+}
+
+connection_file_name = None
+function_file_name = None
+resources_file_name = None
+
+
+# Solicita al usuario que introduzca el número del archivo hasta que se introduzca un número válido
+while connection_file_name is None:
+    file_num = input("Please enter the connection file number (1, 2, or 3): ")
+    if file_num == '1':
+        connection_file_name = connection_file_names['1']
+        function_file_name = function_file_names['1']
+        resources_file_name = resources_file_names['1']
+    elif file_num == '2':
+        connection_file_name = connection_file_names['2']
+        function_file_name = function_file_names['2']
+        resources_file_name = resources_file_names['2']
+    elif file_num == '3':
+        connection_file_name = connection_file_names['3']
+        function_file_name = function_file_names['3']
+        resources_file_name = resources_file_names['3']
+    elif connection_file_name is None:
+        print("Invalid file number. Please try again.")
+
+connections = read_connections(connection_file_name)
 
 
 availableConnections = 0
@@ -39,12 +80,11 @@ for sublist in connections:
         if i != 0:
             availableConnections += 1
 
-print(availableConnections)
 
 coste_conexion = 2
 connections = np.floor_divide(connections, coste_conexion)
 
-print(connections)
+
 
 for i, row in enumerate(connections):
     for j, value in enumerate(row):
@@ -56,12 +96,23 @@ initializer.draw()
 
 builder = QUBObuilder()
 functions = {}
+desired_functions = {}
 
-# Define las funciones que estás buscando
-desired_functions = {3, 5, 6}
+
+# Solicita al usuario que introduzca los números separados por comas
+input_str = input("Please enter the desired functions, separated by spaces: ")
+
+# Divide la cadena en una lista de cadenas
+input_list = input_str.split(' ')
+
+# Convierte la lista de cadenas en un conjunto de enteros
+desired_functions = {int(num_str) for num_str in input_list}
+
+print(desired_functions)
+
 
 # Abre el fichero
-with open('./instancias/6 nodos/nodos_6.DAT', 'r') as f:
+with open(function_file_name, 'r') as f:
     # Lee cada línea del fichero
     nodo = 0
     for line in f:
@@ -74,37 +125,36 @@ with open('./instancias/6 nodos/nodos_6.DAT', 'r') as f:
                 functions[nodo].add(funciones[i])
         nodo += 1
        
-
 print("hola", functions)
 # Abre el archivo en modo de lectura
-with open('./instancias/6 nodos/nodos_recursos_6.DAT', 'r') as file:
+with open(resources_file_name, 'r') as file:
     # Lee la línea del archivo y la divide en números
     resources = file.readline().split()
 
 # Convierte los números a enteros
 resources = [int(resource) for resource in resources]
-#resources = [10, 1, 10, 1]
+
+print("Los recursos son: ", resources)
 
 
-
-num_agents = 3
-QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain ,fourth_constrain,fifth_constrain, sixth_constrain,seventh_constrain, variable_constrain = builder.get_QUBO_model(graph, 0, 5, functions, connections,resources,num_agents, 1, 2, 2, 2, 2, 2)
+num_agents = 2
+QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain ,fourth_constrain,fifth_constrain, sixth_constrain,seventh_constrain, variable_constrain = builder.get_QUBO_model(graph, 0, 14, functions, connections,resources,num_agents, 1, 2, 2, 2, 2, 2)
 solver = QUBOSolverCPU(
 number_iterations=200000,
 number_runs=20,
 scaling_bit_precision=16,
 auto_tuning=AutoTuning.AUTO_SCALING_AND_SAMPLING)
 
-solution_list = solver.minimize(QUBOexpression)
-configuration = solution_list.min_solution.configuration
+#solution_list = solver.minimize(QUBOexpression)
+#configuration = solution_list.min_solution.configuration
 
-for p in cost_function, first_constrain, second_constrain ,third_constrain , fourth_constrain,fifth_constrain, sixth_constrain,seventh_constrain, variable_constrain :
-    print("Min %s: at %s value %f" % (p, configuration, p.compute(configuration)))
+#for p in cost_function, first_constrain, second_constrain ,third_constrain , fourth_constrain,fifth_constrain, sixth_constrain,seventh_constrain, variable_constrain :
+#    print("Min %s: at %s value %f" % (p, configuration, p.compute(configuration)))
 
 
-solution_list = solver.minimize(QUBOexpression)
-my_bit_array = solution_list.min_solution.extract_bit_array('x')
-my_bit_array.draw(axis_names=['i', 'j', 'a'])
+#solution_list = solver.minimize(QUBOexpression)
+#my_bit_array = solution_list.min_solution.extract_bit_array('x')
+#my_bit_array.draw(axis_names=['i', 'j', 'a'])
 
 
 def as_bqm(self) -> 'dimod.BinaryQuadraticModel':
@@ -135,7 +185,7 @@ os.environ['DWAVE_API_TOKEN']='DEV-6d3884fc26ae2d49987a7b350237d126ec957ad7'
 
 sampler = LeapHybridSampler()
 
-answer = sampler.sample(bqm_problem, time_limit=10, label='Hybrid Exec')
+answer = sampler.sample(bqm_problem, time_limit=20, label='Hybrid Exec')
 print(answer)
 samples = []
 for datum in answer.data(['sample', 'energy']):
@@ -165,8 +215,6 @@ print(samples)
 #    samples.append(first_N_bits)
 #    break
 
-
-#samples = [{0: 1, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 1, 7: 1, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0}]
 #print(samples)
 
 # Itera sobre cada diccionario en samples
@@ -203,7 +251,7 @@ for i, sample in enumerate(samples):
                 color = 'blue' 
             else:
                 color = 'red'
-            ax.scatter(x, y, c=color, s=200) 
+            ax.scatter(x, y, c=color, s=100) 
 
         # Establece las ubicaciones y etiquetas de las marcas de los ejes
         ax.set_xticks(np.arange(matrix.shape[1]), np.arange(1, matrix.shape[1] + 1))
