@@ -25,15 +25,15 @@ class QUBObuilder:
         problem_constant_bits_np = np.array(problem_constant_bits, dtype=np.int8)
         
         function_values = functions.values()
-        functions_list = set() 
+        functions_list = [] 
         for value in function_values:
-            if type(value) == set:
-                functions_list.update(value)
+            if type(value) == tuple:
+                for k in value:
+                    if k not in functions_list:
+                        functions_list.append(k)
             else:
-                functions_list.add(value)
-
-        # Convertir el conjunto a una lista
-        functions_list = list(functions_list)
+                if value not in functions_list:
+                    functions_list.append(value)
         
         print("La lista de funciones es: ",functions_list)
         
@@ -104,14 +104,14 @@ class QUBObuilder:
                 seventh_constrain_aux.power(2)
                 seventh_constrain = seventh_constrain + seventh_constrain_aux
 
-        alpha1 = 500  
-        alpha2 = 500
-        alpha3 = 500
-        variable_alpha = 500 
-        alpha4 = 600
-        alpha5 = 500
-        alpha6 = 500
-        alpha7 = 500
+        alpha1 = 50
+        alpha2 = 50
+        alpha3 = 50
+        variable_alpha = 50
+        alpha4 = 50
+        alpha5 = 50
+        alpha6 = 50
+        alpha7 = 50
         QUBOexpression = 0
 
         for a in range(A):
@@ -164,24 +164,28 @@ class QUBObuilder:
         
             #print("La tercera restriccion es: ", third_constrain)
             
-        for function in functions_list:      
-            #print("function: ", function)  
-            variable_constrain_aux = BinPol(var_shape_set)
-            variable_constrain_aux.set_term(-1,()) 
-            nodes_with_functions = []
-            for node in functions:
-                function_set = functions[node]
-                if function in function_set:
-                    nodes_with_functions.append(node)
-            for i in range(N):
-                for j in nodes_with_functions: 
-                    variable_constrain_aux.add_term(1,("x",i,j,a))
-            #print(nodes_with_functions)
-            if function in initial_node_functions:
-                variable_constrain_aux.add_term(1,()) 
-            variable_constrain_aux.add_slack_variable('slack_variable_'+str(function)+"_"+str(a), factor=-1)
-            variable_constrain_aux.power(2)
-            variable_constrain = variable_constrain + variable_constrain_aux
+            for function_set in functions_list:      
+                #print("function: ", function)  
+                variable_constrain_aux = BinPol(var_shape_set)
+                variable_constrain_aux.set_term(-1,()) 
+                nodes_with_functions = []
+                for node in functions:
+                    function_value = functions[node]
+                    if isinstance(function_value, tuple):
+                        function_value = set(function_value)
+                    elif not isinstance(function_value, set):
+                        function_value = {function_value}
+                    if function_set & function_value:
+                        nodes_with_functions.append(node)
+                for i in range(N):
+                    for j in nodes_with_functions: 
+                        variable_constrain_aux.add_term(1,("x",i,j,a))
+                #print(nodes_with_functions)
+                if function_set in initial_node_functions:
+                    variable_constrain_aux.add_term(1,()) 
+                variable_constrain_aux.add_slack_variable('slack_variable_'+str(function_set)+"_"+str(a), factor=-1)
+                variable_constrain_aux.power(2)
+                variable_constrain = variable_constrain + variable_constrain_aux
             
             #print("La variable restriccion es: ", variable_constrain)
 
@@ -222,7 +226,7 @@ class QUBObuilder:
                     #print("La quinta restriccion es: ", fifth_constrain)
             
         
-        QUBOexpression = 400*cost_function + alpha1*first_constrain + alpha2*second_constrain + alpha3*third_constrain + variable_alpha*variable_constrain + alpha4*fourth_constrain + alpha5*fifth_constrain + alpha6*sixth_constrain + alpha7*seventh_constrain
+        QUBOexpression = cost_function + alpha1*first_constrain + alpha2*second_constrain + alpha3*third_constrain + variable_alpha*variable_constrain + alpha4*fourth_constrain + alpha5*fifth_constrain + alpha6*sixth_constrain + alpha7*seventh_constrain
         return QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain, fourth_constrain,fifth_constrain, sixth_constrain, seventh_constrain, variable_constrain
 
             

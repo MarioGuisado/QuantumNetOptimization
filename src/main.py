@@ -60,10 +60,14 @@ while connection_file_name is None:
         connection_file_name = connection_file_names['1']
         function_file_name = function_file_names['1']
         resources_file_name = resources_file_names['1']
+        hybrid_time = 10
+        dot_size = 200
     elif file_num == '2':
         connection_file_name = connection_file_names['2']
         function_file_name = function_file_names['2']
         resources_file_name = resources_file_names['2']
+        hybrid_time = 25
+        dot_size = 100
     elif file_num == '3':
         connection_file_name = connection_file_names['3']
         function_file_name = function_file_names['3']
@@ -92,7 +96,7 @@ for i, row in enumerate(connections):
             graph.add_edge(i, j)
 
 initializer = Initializer(graph)
-initializer.draw()
+#initializer.draw()
 
 builder = QUBObuilder()
 functions = {}
@@ -137,24 +141,34 @@ resources = [int(resource) for resource in resources]
 print("Los recursos son: ", resources)
 
 
-num_agents = 2
-QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain ,fourth_constrain,fifth_constrain, sixth_constrain,seventh_constrain, variable_constrain = builder.get_QUBO_model(graph, 0, 14, functions, connections,resources,num_agents, 1, 2, 2, 2, 2, 2)
+num_agents = -1
+
+# Solicita al usuario que introduzca el número de agentes hasta que se introduzca un número válido
+while num_agents < 1 or num_agents > 3:
+    try:
+        num_agents = int(input("Please enter the number of agents (between 1 and 3): "))
+        if num_agents < 1 or num_agents > 3:
+            print("Invalid number of agents. Please enter a number between 1 and 3.")
+    except ValueError:
+        print("Invalid input. Please enter an integer.")
+
+QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain ,fourth_constrain,fifth_constrain, sixth_constrain,seventh_constrain, variable_constrain = builder.get_QUBO_model(graph, 0, 5, functions, connections,resources,num_agents, 1, 2, 2, 2, 2, 2)
 solver = QUBOSolverCPU(
 number_iterations=200000,
-number_runs=20,
+number_runs=30,
 scaling_bit_precision=16,
 auto_tuning=AutoTuning.AUTO_SCALING_AND_SAMPLING)
 
-#solution_list = solver.minimize(QUBOexpression)
-#configuration = solution_list.min_solution.configuration
+solution_list = solver.minimize(QUBOexpression)
+configuration = solution_list.min_solution.configuration
 
-#for p in cost_function, first_constrain, second_constrain ,third_constrain , fourth_constrain,fifth_constrain, sixth_constrain,seventh_constrain, variable_constrain :
-#    print("Min %s: at %s value %f" % (p, configuration, p.compute(configuration)))
+for p in cost_function, first_constrain, second_constrain ,third_constrain , fourth_constrain,fifth_constrain, sixth_constrain,seventh_constrain, variable_constrain :
+    print("Min %s: at %s value %f" % (p, configuration, p.compute(configuration)))
 
 
-#solution_list = solver.minimize(QUBOexpression)
-#my_bit_array = solution_list.min_solution.extract_bit_array('x')
-#my_bit_array.draw(axis_names=['i', 'j', 'a'])
+solution_list = solver.minimize(QUBOexpression)
+my_bit_array = solution_list.min_solution.extract_bit_array('x')
+my_bit_array.draw(axis_names=['i', 'j', 'a'])
 
 
 def as_bqm(self) -> 'dimod.BinaryQuadraticModel':
@@ -181,11 +195,11 @@ def as_bqm(self) -> 'dimod.BinaryQuadraticModel':
         
 
 bqm_problem=QUBOexpression.as_bqm()
-os.environ['DWAVE_API_TOKEN']='DEV-6d3884fc26ae2d49987a7b350237d126ec957ad7'
+os.environ['DWAVE_API_TOKEN']='DEV-762f018575afaf619dbaf5e09a2fc1cf99c78ec4'
 
 sampler = LeapHybridSampler()
 
-answer = sampler.sample(bqm_problem, time_limit=20, label='Hybrid Exec')
+answer = sampler.sample(bqm_problem, time_limit=hybrid_time, label='Hybrid Exec')
 print(answer)
 samples = []
 for datum in answer.data(['sample', 'energy']):
@@ -251,7 +265,7 @@ for i, sample in enumerate(samples):
                 color = 'blue' 
             else:
                 color = 'red'
-            ax.scatter(x, y, c=color, s=100) 
+            ax.scatter(x, y, c=color, s=dot_size) 
 
         # Establece las ubicaciones y etiquetas de las marcas de los ejes
         ax.set_xticks(np.arange(matrix.shape[1]), np.arange(1, matrix.shape[1] + 1))
