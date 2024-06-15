@@ -33,19 +33,19 @@ def read_connections(path):
 connection_file_names = {
     '1': './instancias/6 nodos/topologia_6.DAT',
     '2': './instancias/19 nodos/topologia_19.DAT',
-    '3': './instancias/52 nodos/topologia_52.DAT',
+    '3': './instancias/15 nodos/topologia_15.DAT',
 }
 
 function_file_names = {
     '1': './instancias/6 nodos/nodos_6.DAT',
     '2': './instancias/19 nodos/nodos_19.DAT',
-    '3': './instancias/52 nodos/nodos_52.DAT',
+    '3': './instancias/15 nodos/nodos_15.DAT',
 }
 
 resources_file_names = {
     '1': './instancias/6 nodos/nodos_recursos_6.DAT',
     '2': './instancias/19 nodos/nodos_recursos_19.DAT',
-    '3': './instancias/52 nodos/nodos_recursos_52.DAT',
+    '3': './instancias/15 nodos/nodos_recursos_15.DAT',
 }
 
 connection_file_name = None
@@ -62,16 +62,45 @@ while connection_file_name is None:
         resources_file_name = resources_file_names['1']
         hybrid_time = 10
         dot_size = 200
+        alpha1 = 50
+        alpha2 = 50
+        alpha3 = 50
+        variable_alpha = 50
+        alpha4 = 50
+        alpha5 = 50
+        alpha6 = 50
+        alpha7 = 50
+        alpha8 = 1
     elif file_num == '2':
         connection_file_name = connection_file_names['2']
         function_file_name = function_file_names['2']
         resources_file_name = resources_file_names['2']
-        hybrid_time = 25
+        hybrid_time = 40
         dot_size = 100
+        alpha1 = 5000
+        alpha2 = 5000
+        alpha3 = 5000
+        variable_alpha = 3000
+        alpha4 = 5000
+        alpha5 = 3000
+        alpha6 = 3000
+        alpha7 = 3000
+        alpha8 = 10
     elif file_num == '3':
         connection_file_name = connection_file_names['3']
         function_file_name = function_file_names['3']
         resources_file_name = resources_file_names['3']
+        hybrid_time = 25
+        dot_size = 100
+        alpha1 = 2000
+        alpha2 = 2000
+        alpha3 = 5000
+        variable_alpha = 2000
+        alpha4 = 500
+        alpha5 = 500
+        alpha6 = 500
+        alpha7 = 500
+        alpha8 = 5
     elif connection_file_name is None:
         print("Invalid file number. Please try again.")
 
@@ -87,7 +116,7 @@ for sublist in connections:
 
 coste_conexion = 2
 connections = np.floor_divide(connections, coste_conexion)
-
+print(connections)
 
 
 for i, row in enumerate(connections):
@@ -96,7 +125,7 @@ for i, row in enumerate(connections):
             graph.add_edge(i, j)
 
 initializer = Initializer(graph)
-#initializer.draw()
+initializer.draw()
 
 builder = QUBObuilder()
 functions = {}
@@ -152,23 +181,23 @@ while num_agents < 1 or num_agents > 3:
     except ValueError:
         print("Invalid input. Please enter an integer.")
 
-QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain ,fourth_constrain,fifth_constrain, sixth_constrain,seventh_constrain, variable_constrain = builder.get_QUBO_model(graph, 0, 5, functions, connections,resources,num_agents, 1, 2, 2, 2, 2, 2)
+QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain ,fourth_constrain,fifth_constrain, sixth_constrain,seventh_constrain, variable_constrain = builder.get_QUBO_model(graph, 1, 10, functions, connections,resources,num_agents,alpha1, alpha2, alpha3, variable_alpha, alpha4, alpha5, alpha6, alpha7, alpha8)
 solver = QUBOSolverCPU(
 number_iterations=200000,
 number_runs=30,
 scaling_bit_precision=16,
 auto_tuning=AutoTuning.AUTO_SCALING_AND_SAMPLING)
 
-solution_list = solver.minimize(QUBOexpression)
-configuration = solution_list.min_solution.configuration
+#solution_list = solver.minimize(QUBOexpression)
+#configuration = solution_list.min_solution.configuration
 
-for p in cost_function, first_constrain, second_constrain ,third_constrain , fourth_constrain,fifth_constrain, sixth_constrain,seventh_constrain, variable_constrain :
-    print("Min %s: at %s value %f" % (p, configuration, p.compute(configuration)))
+#for p in cost_function, first_constrain, second_constrain ,third_constrain , fourth_constrain,fifth_constrain, sixth_constrain,seventh_constrain, variable_constrain :
+#    print("Min %s: at %s value %f" % (p, configuration, p.compute(configuration)))
 
 
-solution_list = solver.minimize(QUBOexpression)
-my_bit_array = solution_list.min_solution.extract_bit_array('x')
-my_bit_array.draw(axis_names=['i', 'j', 'a'])
+#solution_list = solver.minimize(QUBOexpression)
+#my_bit_array = solution_list.min_solution.extract_bit_array('x')
+#my_bit_array.draw(axis_names=['i', 'j', 'a'])
 
 
 def as_bqm(self) -> 'dimod.BinaryQuadraticModel':
@@ -195,7 +224,7 @@ def as_bqm(self) -> 'dimod.BinaryQuadraticModel':
         
 
 bqm_problem=QUBOexpression.as_bqm()
-os.environ['DWAVE_API_TOKEN']='DEV-762f018575afaf619dbaf5e09a2fc1cf99c78ec4'
+os.environ['DWAVE_API_TOKEN']='DEV-937f902268d58e5ac473ef59a35c57b0027979c4'
 
 sampler = LeapHybridSampler()
 

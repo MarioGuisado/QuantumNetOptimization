@@ -9,7 +9,7 @@ import networkx as nx
 from random import random
 
 class QUBObuilder:
-    def get_QUBO_model(self, graph, initial_node, final_node, functions, connections, resources,num_agents, alpha1, alpha2, alpha3, alpha4, alpha5, alpha6):
+    def get_QUBO_model(self, graph, initial_node, final_node, functions, connections, resources,num_agents, alpha1, alpha2, alpha3, variable_alpha, alpha4, alpha5, alpha6, alpha7, alpha8):
         N = len(graph.nodes())
         A = num_agents
         problem_constant_bits = [[[-1 for _ in range(A)] for _ in range(N)] for _ in range(N)]
@@ -226,7 +226,7 @@ class QUBObuilder:
                     #print("La quinta restriccion es: ", fifth_constrain)
             
         
-        QUBOexpression = cost_function + alpha1*first_constrain + alpha2*second_constrain + alpha3*third_constrain + variable_alpha*variable_constrain + alpha4*fourth_constrain + alpha5*fifth_constrain + alpha6*sixth_constrain + alpha7*seventh_constrain
+        QUBOexpression = alpha8*cost_function + alpha1*first_constrain + alpha2*second_constrain + alpha3*third_constrain + variable_alpha*variable_constrain + alpha4*fourth_constrain + alpha5*fifth_constrain + alpha6*sixth_constrain + alpha7*seventh_constrain
         return QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain, fourth_constrain,fifth_constrain, sixth_constrain, seventh_constrain, variable_constrain
 
             

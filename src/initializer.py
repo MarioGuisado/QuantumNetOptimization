@@ -13,5 +13,6 @@ class Initializer:
         self.graph = graph
 
     def draw(self):
-        nx.draw(self.graph, with_labels=True, node_color='lightblue', node_size=1000, font_size=12, font_weight='bold', arrows=True)
+        labels = {node: node + 1 for node in self.graph.nodes()}
+        nx.draw(self.graph, with_labels=True, labels=labels, node_color='lightblue', node_size=1000, font_size=12, font_weight='bold', arrows=True)
         plt.show()
