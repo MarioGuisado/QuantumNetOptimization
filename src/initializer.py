@@ -1,3 +1,6 @@
+#Author: Mario Guisado García
+#Github: MarioGuisado
+
 import numpy as np
 from dadk.QUBOSolverCPU import *
 import matplotlib.pyplot as plt
@@ -42,7 +45,7 @@ class Initializer:
     def get_file_data(self):
         connection_file_name = None
         while connection_file_name is None:
-            file_num = input("Please enter the connection file number (1 or 2): ")
+            file_num = input("Please select the graph (6 nodes -> 1 | 19 nodes -> 2): ")
             if file_num == '1':
                 connection_file_name = connection_file_names['1']
                 function_file_name = function_file_names['1']
@@ -57,8 +60,8 @@ class Initializer:
                 resources_file_name = resources_file_names['2']
                 hybrid_time = 25
                 dot_size = 100
-                alpha_cost_function = 5
-                self.agents_limit = 2
+                alpha_cost_function = 4
+                self.agents_limit = 3
             elif connection_file_name is None:
                 print("Invalid file number. Please try again.")
 

@@ -1,4 +1,6 @@
-# Define los nombres de los archivos
+#Author: Mario Guisado García
+#Github: MarioGuisado
+
 connection_file_names = {
     '1': './instancias/6 nodos/topologia_6.DAT',
     '2': './instancias/19 nodos/topologia_19.DAT'
@@ -14,4 +16,4 @@ resources_file_names = {
     '2': './instancias/19 nodos/nodos_recursos_19.DAT'
 }
 
-token = 'DEV-b2ac9abc6ad4a52f3c34b0410525014dd9f3e39f'
+token = 'DEV-6e2a8f2421c4ef2a278b7f6cc2616539bc86daf1'

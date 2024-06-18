@@ -1,3 +1,6 @@
+#Author: Mario Guisado García
+#Github: MarioGuisado
+
 import numpy as np
 from dadk.QUBOSolverCPU import *
 import matplotlib.pyplot as plt
@@ -7,6 +10,8 @@ from QUBObuilder import *
 from dwave.system import LeapHybridSampler
 from constants import token
 import warnings
+import gc
+gc.disable()
 warnings.filterwarnings("ignore", category=UserWarning, module="dadk.BinPol")
 
 
@@ -57,24 +62,23 @@ number_runs=30,
 scaling_bit_precision=16,
 auto_tuning=AutoTuning.AUTO_SCALING_AND_SAMPLING)
 
-user_input = input("Do you want to execute the simulator first (only recommended for small graphs and 1 or 2 agents, it may be inaccurate)?  (1 - yes / 0 - no): ")
-if user_input.lower() == 1:
+user_input = int(input("Do you want to execute the simulator first? (only recommended for small graphs, it may be inaccurate due to processing limitations)  (1 - yes / 0 - no): "))
+if user_input == 1:
     solution_list = solver.minimize(QUBOexpression)
     configuration = solution_list.min_solution.configuration
-
+    print("Value of the cost function and constrains: ")
     for p in cost_function, first_constrain, second_constrain ,third_constrain , fourth_constrain,fifth_constrain, sixth_constrain,seventh_constrain, variable_constrain :
         print("Min %s: at %s value %f" % (p, configuration, p.compute(configuration)))
 
     solution_list = solver.minimize(QUBOexpression)
     my_bit_array = solution_list.min_solution.extract_bit_array('x')
     my_bit_array.draw(axis_names=['i', 'j', 'a'])
-
         
 bqm_problem=QUBOexpression.as_bqm()
 os.environ['DWAVE_API_TOKEN']= token
 sampler = LeapHybridSampler()
 
-print("Executing Hybrid Solver...")
+print("Executing Hybrid Solver, please wait...")
 answer = sampler.sample(bqm_problem, time_limit=hybrid_time, label='Hybrid Exec')
 
 samples = []

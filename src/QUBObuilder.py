@@ -1,3 +1,6 @@
+#Author: Mario Guisado García
+#Github: MarioGuisado
+
 import numpy as np
 from dadk.QUBOSolverCPU import *
 
@@ -111,14 +114,14 @@ class QUBObuilder:
                 seventh_constrain_aux.power(2)
                 seventh_constrain = seventh_constrain + seventh_constrain_aux
 
-        alpha1 = 50
-        alpha2 = 50
-        alpha3 = 50
-        variable_alpha = 50
-        alpha4 = 50
-        alpha5 = 50
-        alpha6 = 50
-        alpha7 = 50
+        alpha1 = 30
+        alpha2 = 30
+        alpha3 = 30
+        variable_alpha = 30
+        alpha4 = 30
+        alpha5 = 30
+        alpha6 = 30
+        alpha7 = 30
         QUBOexpression = 0
 
         for a in range(A):
