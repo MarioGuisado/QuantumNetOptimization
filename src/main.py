@@ -62,7 +62,7 @@ number_runs=30,
 scaling_bit_precision=16,
 auto_tuning=AutoTuning.AUTO_SCALING_AND_SAMPLING)
 
-user_input = int(input("Do you want to execute the simulator first? (only recommended for small graphs, it may be inaccurate due to processing limitations)  (1 - yes / 0 - no): "))
+user_input = int(input("Do you want to execute the simulator first? (not recommended for big graphs, it may be inaccurate due to processing limitations)  (1 - yes / 0 - no): "))
 if user_input == 1:
     solution_list = solver.minimize(QUBOexpression)
     configuration = solution_list.min_solution.configuration

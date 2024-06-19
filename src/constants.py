@@ -16,4 +16,4 @@ resources_file_names = {
     '2': './instancias/19 nodos/nodos_recursos_19.DAT'
 }
 
-token = 'DEV-6e2a8f2421c4ef2a278b7f6cc2616539bc86daf1'
+token = 'DEV-a4d35da14644d807380c1c4307499ac87162db74'

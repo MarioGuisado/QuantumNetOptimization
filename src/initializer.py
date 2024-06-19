@@ -58,9 +58,9 @@ class Initializer:
                 connection_file_name = connection_file_names['2']
                 function_file_name = function_file_names['2']
                 resources_file_name = resources_file_names['2']
-                hybrid_time = 25
+                hybrid_time = 35
                 dot_size = 100
-                alpha_cost_function = 4
+                alpha_cost_function = 5
                 self.agents_limit = 3
             elif connection_file_name is None:
                 print("Invalid file number. Please try again.")

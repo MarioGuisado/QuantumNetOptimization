@@ -118,7 +118,7 @@ class QUBObuilder:
         alpha2 = 30
         alpha3 = 30
         variable_alpha = 30
-        alpha4 = 30
+        alpha4 = 60
         alpha5 = 30
         alpha6 = 30
         alpha7 = 30
