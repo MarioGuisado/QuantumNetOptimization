@@ -4,6 +4,7 @@
 import numpy as np
 from dadk.QUBOSolverCPU import *
 
+#Function to transform the QUBO expression for the solver
 def as_bqm(self) -> 'dimod.BinaryQuadraticModel':
     """
     The polynomial is returned as a :class:`dimod.BinaryQuadraticModel` object.
@@ -200,6 +201,7 @@ class QUBObuilder:
             
         
         QUBOexpression = alpha_cost_function*cost_function + alpha1*first_constrain + alpha2*second_constrain + alpha3*third_constrain + variable_alpha*variable_constrain + alpha4*fourth_constrain + alpha5*fifth_constrain + alpha6*sixth_constrain + alpha7*seventh_constrain
+        #Every expression is returned individually in orden to be able to check the values of the expressions separately
         return QUBOexpression, cost_function, first_constrain ,second_constrain ,third_constrain, fourth_constrain,fifth_constrain, sixth_constrain, seventh_constrain, variable_constrain
 
     
